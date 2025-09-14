@@ -6,6 +6,9 @@ import {
 import Game from './Game';
 import TicTacToeGame from './TicTacToeGame';
 import Player from '../../lib/Player';
+import InvalidParametersError, {
+  PLAYER_ALREADY_IN_GAME_MESSAGE,
+} from '../../lib/InvalidParametersError';
 
 /**
  * A QuantumTicTacToeGame is a Game that implements the rules of the Tic-Tac-Toe variant described at https://www.smbc-comics.com/comic/tic.
@@ -29,6 +32,9 @@ export default class QuantumTicTacToeGame extends Game<
   }
 
   protected _join(player: Player): void {
+    if (this.state.x === player.id || this.state.o === player.id) {
+      throw new InvalidParametersError(PLAYER_ALREADY_IN_GAME_MESSAGE);
+    }
     // TODO: implement me
   }
 
