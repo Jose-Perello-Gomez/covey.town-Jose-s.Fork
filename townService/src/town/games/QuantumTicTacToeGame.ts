@@ -28,6 +28,27 @@ export default class QuantumTicTacToeGame extends Game<
   private _moveCount: number;
 
   public constructor() {
+    super({
+      moves: [],
+      status: 'WAITING_TO_START',
+      xScore: 0,
+      oScore: 0,
+      publiclyVisible: {
+        A: [],
+        B: [],
+        C: [],
+      },
+    });
+
+    this._games = {
+      A: new TicTacToeGame(),
+      B: new TicTacToeGame(),
+      C: new TicTacToeGame(),
+    };
+
+    this._xScore = 0;
+    this._oScore = 0;
+    this._moveCount = 0;
     // TODO: implement me
   }
 
@@ -35,11 +56,40 @@ export default class QuantumTicTacToeGame extends Game<
     if (this.state.x === player.id || this.state.o === player.id) {
       throw new InvalidParametersError(PLAYER_ALREADY_IN_GAME_MESSAGE);
     }
+    if (!this.state.x) {
+      this.state = {
+        ...this.state,
+        x: player.id,
+      };
+    }
     // TODO: implement me
   }
 
   protected _leave(player: Player): void {
-    // TODO: implement me
+    if (this.state.x !== player.id && this.state.o !== player.id) {
+      throw new InvalidParametersError(PLAYER_ALREADY_IN_GAME_MESSAGE);
+    }
+
+    if (this.state.o === undefined) {
+      this.state = {
+        moves: [],
+        status: 'WAITING_TO_START',
+      };
+      return;
+    }
+    if (this.state.x === player.id) {
+      this.state = {
+        ...this.state,
+        status: 'OVER',
+        winner: this.state.o,
+      };
+    } else {
+      this.state = {
+        ...this.state,
+        status: 'OVER',
+        winner: this.state.x,
+      };
+    }
   }
 
   /**
@@ -52,6 +102,19 @@ export default class QuantumTicTacToeGame extends Game<
   }
 
   public applyMove(move: GameMove<QuantumTicTacToeMove>): void {
+    let gamePiece: 'X' | 'O';
+    if (move.playerID === this.state.x) {
+      gamePiece = 'X';
+    } else {
+      gamePiece = 'O';
+    }
+    const move = {
+      gamePiece,
+      col: move.move.col,
+      row: move.move.row,
+      board: move.move.board,
+    };
+
     this._validateMove(move);
 
     // TODO: implement the guts of this method
