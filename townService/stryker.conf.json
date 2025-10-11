@@ -18,7 +18,6 @@
     "configFile": "jest.config.cjs"
   },
   "mutate": [
-    "src/town/games/ConnectFourGame.ts",
-    "src/town/games/ConnectFourGameArea.ts"
+    "src/town/games/QuantumTicTacToeGame.ts"
   ]
 }

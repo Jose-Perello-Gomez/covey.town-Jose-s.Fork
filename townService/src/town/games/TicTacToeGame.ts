@@ -105,7 +105,14 @@ export default class TicTacToeGame extends Game<TicTacToeGameState, TicTacToeMov
     }
   }
 
-  private _applyMove(move: TicTacToeMove): void {
+  // Inside TicTacToeGame
+  public getPieceAt(row: number, col: number): 'X' | 'O' | null {
+    const value = this._board[row][col];
+    if (value === 'X' || value === 'O') return value;
+    return null;
+  }
+
+  public _applyMove(move: TicTacToeMove): void {
     this.state = {
       ...this.state,
       moves: [...this.state.moves, move],

@@ -1,4 +1,11 @@
-import InvalidParametersError, { INVALID_COMMAND_MESSAGE } from '../../lib/InvalidParametersError';
+import { assert } from 'console';
+// import { throws } from 'assert';
+import InvalidParametersError, {
+  GAME_ID_MISSMATCH_MESSAGE,
+  GAME_NOT_IN_PROGRESS_MESSAGE,
+  INVALID_COMMAND_MESSAGE,
+  INVALID_MOVE_MESSAGE,
+} from '../../lib/InvalidParametersError';
 import Player from '../../lib/Player';
 import {
   GameInstance,
@@ -6,9 +13,12 @@ import {
   InteractableCommandReturnType,
   InteractableType,
   QuantumTicTacToeGameState,
+  QuantumTicTacToeMove,
+  TicTacToeMove,
 } from '../../types/CoveyTownSocket';
 import GameArea from './GameArea';
 import QuantumTicTacToeGame from './QuantumTicTacToeGame';
+// import TicTacToeGame from './TicTacToeGame';
 
 /**
  * A QuantumTicTacToeGameArea is a GameArea that hosts a QuantumTicTacToeGame.
@@ -53,12 +63,59 @@ export default class QuantumTicTacToeGameArea extends GameArea<QuantumTicTacToeG
    * to notify any listeners of a state update)
    * If the command is unsuccessful (throws an error), the error is propagated to the caller
    */
-  public handleCommand<CommandType extends InteractableCommand>(
+  public handleCommand<CommandType extends InteractableCommand>( // This code is taken from the TicTacToeGameArea
     command: CommandType,
     player: Player,
   ): InteractableCommandReturnType<CommandType> {
-    // TODO: implement this based on the similar method in TicTacToeGameArea
-    // I think I'll need the _stateUpdated helper method, above.
+    if (command.type === 'GameMove') {
+      const game = this._game;
+      if (!game) {
+        throw new InvalidParametersError(GAME_NOT_IN_PROGRESS_MESSAGE);
+      }
+      if (this._game?.id !== command.gameID) {
+        throw new InvalidParametersError(GAME_ID_MISSMATCH_MESSAGE);
+      }
+      assert(
+        command.move.gamePiece === 'X' || command.move.gamePiece === 'O',
+        'Invalid game piece',
+      );
+      if (!('board' in command.move)) {
+        throw new InvalidParametersError(INVALID_MOVE_MESSAGE);
+      }
+      // these two shouldn't really affect anmything as far as I know
+      const move = command.move as QuantumTicTacToeMove;
+      assert(move.board === 'A' || move.board === 'B' || move.board === 'C', 'Invalid Board');
+      game.applyMove({
+        gameID: command.gameID,
+        playerID: player.id,
+        move,
+      });
+      this._stateUpdated(game.toModel());
+      return undefined as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'JoinGame') {
+      let game = this._game;
+      if (!game || game.state.status === 'OVER') {
+        game = new QuantumTicTacToeGame();
+        this._game = game;
+      }
+      game.join(player);
+      this._stateUpdated(game.toModel());
+      return { gameID: game.id } as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'LeaveGame') {
+      const game = this._game;
+      if (!game) {
+        throw new InvalidParametersError(GAME_NOT_IN_PROGRESS_MESSAGE);
+      }
+      if (this._game?.id !== command.gameID) {
+        throw new InvalidParametersError(GAME_ID_MISSMATCH_MESSAGE);
+      }
+      game.leave(player);
+      this._stateUpdated(game.toModel());
+      return undefined as InteractableCommandReturnType<CommandType>;
+    }
+
     throw new InvalidParametersError(INVALID_COMMAND_MESSAGE);
   }
 }
